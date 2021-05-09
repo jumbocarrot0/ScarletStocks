@@ -1,0 +1,31 @@
+{% extends 'base.html' %}
+
+{% block titles %}
+    <div class="bg-dark p-5 rounded-lg m-3 text-white rounded">
+        <div class="container text-center">
+            <h1 id="FutureSee" class="display-4">Search Results</h1>
+            <p class="lead"></p>
+        </div>
+    </div>
+{% endblock %}
+
+{% block content %}
+    <div class="row">
+        <div class="col-sm-1">
+        </div>
+        <div class="col">
+            {% for result in output_results %}
+                <div class="row">
+                    <a class="btn btn-outline-secondary card col"
+                       href="{{ url_for('profile_route', exchange=result['exchange'], ticker = result['code']) }}">
+                        <div class="card-body">
+                            <h5 class="card-title">{{ result['name'] }}</h5>
+                        </div>
+                    </a>
+                </div>
+            {% endfor %}
+        </div>
+        <div class="col-sm-1">
+        </div>
+    </div>
+{% endblock %}

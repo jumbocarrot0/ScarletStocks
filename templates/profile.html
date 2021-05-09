@@ -1,0 +1,96 @@
+{% extends 'base.html' %}
+
+{% block content %}
+
+    <br/><br/>
+    <div class="row">
+        <div class="col">
+            <h2 class="card-title">{{ stock_data['name'] }}</h2>
+            {% if current_user.is_authenticated %}
+                {% if stock_data['code'] in watchlist_data[stock_data['exchange']] %}
+                    <button id="btn_watchlist" class="btn btn-lg btn-primary watchlist_remove"
+                            onclick="modifyWatchlist()"
+                            type="button">
+                    Remove from Watchlist
+                {% else %}
+                    <button id="btn_watchlist" class="btn btn-lg btn-primary watchlist_add"
+                            onclick="modifyWatchlist()" type="button">
+                    Add to Watchlist
+                {% endif %}
+            </button>
+                <br/>
+                <br/>
+            {% endif %}
+            {#            <p>{{ stock_data['description'] }}</p>#}
+            {#        </div>#}
+            {#        <div class="col-4">#}
+            <div class="card">
+                <div class="card-body">
+                    <h5 class="card-title">{{ stock_data['name'] }}</h5>
+                    <h5 class="card-title">Code: {{ stock_data['code'] }}</h5>
+                    <p class="card-text">Industry: {{ stock_data['industry'] }}</p>
+                    <p class="card-text">Last Trade Time: {{ stock_data['lastTradeTime'] }}</p>
+                </div>
+            </div>
+            <br/>
+            <div class="card text-white {% if (stock_data['price_day_change']/stock_data['price'])|float > 0 %}bg-success{% else %}bg-danger{% endif %}">
+                <div class="card-body">
+                    <h5 class="card-title">Price: {{ stock_data['price'] }}$ ({{ stock_data['currency'] }})</h5>
+                    <h5 class="card-title">Percent
+                        Change: {{ (stock_data['price_day_change']/stock_data['price'])|float*10000|round/100 }}%</h5>
+                    <p class="card-text"></p>
+                </div>
+            </div>
+        </div>
+    </div>
+
+{% endblock %}
+
+{% block scripts %}
+    <script>
+
+        function modifyWatchlist() {
+
+            //Creating AJAX object and variables
+            var ajax = new XMLHttpRequest();
+            var method = 'POST';
+            var url = '{{ url_for('modify_watchlist') }}';
+            var asynchronous = true;
+            let watchlist_button = document.getElementById('btn_watchlist');
+            if (watchlist_button.classList.contains('watchlist_add')) {
+                var instruction = 'add';
+            } else if (watchlist_button.classList.contains('watchlist_remove')) {
+                var instruction = 'remove';
+            }
+
+            //open and send AJAX request using XMLH object
+            ajax.open(method, url, asynchronous);
+            ajax.setRequestHeader('Content-type', 'application/x-www-form-urlencoded');
+            ajax.send('code={{ stock_data['code'] }}&exchange={{ stock_data['exchange'] }}&instruction=' + instruction);
+
+
+            //receive response from query
+            ajax.onreadystatechange = function () {
+                if (this.readyState === 4 && this.status === 200) {
+
+                    if (instruction === 'remove') {
+                        watchlist_button.innerText = 'Add to Watchlist';
+                        watchlist_button.classList.add('watchlist_add');
+                        watchlist_button.classList.remove('watchlist_remove')
+                    } else {
+                        watchlist_button.innerText = 'Remove from Watchlist';
+                        watchlist_button.classList.remove('watchlist_add');
+                        watchlist_button.classList.add('watchlist_remove')
+                    }
+
+                    var output_data = this.responseText;
+                    console.log(output_data);
+
+                    //document.location.reload(true)
+
+                }
+
+            }
+        }
+    </script>
+{% endblock %}

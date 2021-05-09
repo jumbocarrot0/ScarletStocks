@@ -1,0 +1,90 @@
+{% extends 'base.html' %}
+
+{% block content %}
+    <br/>
+    <div class="card" style="width: 100%; max-width: 600px; padding: 55px 10%; margin: auto;">
+        <form class="needs-validation" action="{{ url_for('portfolio_add_route') }}" method="POST" novalidate>
+            <h1 class="h3 mb-3 fw-normal">Add to Portfolio</h1>
+
+
+            <div class="form-floating">
+                <input type="text" name="inputExchange" class="form-control" id="floatingInputExchange"
+                       placeholder="Australian Securities Exchange" list="datalistExchanges" required>
+                <label for="floatingInputExchange">Exchange</label>
+                <datalist id="datalistExchanges">
+                    {# This is the easiest way to get a list of all
+                exchanges without sending a variable in server-side. #}
+                    {% set exchanges = [] %}
+                    {% for stock in global_stock_data %}
+                        {% set exchanges = exchanges.append(stock['exchange']) %}
+                    {% endfor %}
+                    {% for exchange in exchanges|unique %}
+                        <option value="{{ exchange }}"></option>
+                    {% endfor %}
+                </datalist>
+            </div>
+            <br/>
+            <div class="form-floating">
+                <input type="text" name="inputCode" class="form-control" id="floatingInputCode"
+                       placeholder="AAA" list="datalistCodes" required>
+                <label for="floatingInput2">Ticker Code</label>
+                <datalist id="datalistCodes">
+{#                    {% for stock in global_stock_data %}#}
+{#                        <option value="{{ stock['code'] }}"></option>#}
+{#                    {% endfor %}#}
+                </datalist>
+            </div>
+            <br/>
+            <div class="form-floating">
+                <input type="number" name="inputQuantity" class="form-control" id="floatingInputQuantity"
+                       placeholder="10" style="margin-bottom: -1px; border-bottom-right-radius: 0;
+                       border-bottom-left-radius: 0;" min="1" required>
+                <label for="floatingInputQuantity">Quantity</label>
+            </div>
+            <div class="form-floating">
+                <input type="number" name="inputPrice" class="form-control" id="floatingInputPrice"
+                       placeholder="10" style="margin-bottom: -1px; border-radius: 0" min="0.01" step="0.01" required>
+                <label for="floatingInputPrice">Price Bought</label>
+            </div>
+            <div class="form-floating">
+                <input type="date" name="inputDateBought" class="form-control" id="floatingInputDateBought"
+                       value="{{ current_time['date'] }}" min="1900-01-01" max="{{ current_time['date'] }}"
+                       placeholder="dd/mm/yyyy" style="margin-bottom: -1px; border-radius: 0;" required>
+                <label for="floatingInputDateBought">Purchase Date</label>
+            </div>
+            <div class="form-floating">
+                <input type="time" name="inputTimeBought" class="form-control" id="floatingInputTimeBought"
+                       value="{{ current_time['time'] }}" placeholder="--:-- --" style="border-top-right-radius: 0;
+                       border-top-left-radius: 0;" required>
+                <label for="floatingInputTimeBought">Purchase Time</label>
+            </div>
+            <br/>
+            <button class="w-100 btn btn-lg btn-primary" type="submit">Add Stock</button>
+        </form>
+    </div>
+{% endblock %}
+
+{% block scripts %}
+    <script>
+        // Example starter JavaScript for disabling form submissions if there are invalid fields
+        (function () {
+            'use strict';
+
+            // Fetch all the forms we want to apply custom Bootstrap validation styles to
+            var forms = document.querySelectorAll('.needs-validation');
+
+            // Loop over them and prevent submission
+            Array.prototype.slice.call(forms)
+                .forEach(function (form) {
+                    form.addEventListener('submit', function (event) {
+                        if (!form.checkValidity()) {
+                            event.preventDefault();
+                            event.stopPropagation()
+                        }
+
+                        form.classList.add('was-validated')
+                    }, false)
+                })
+        })()
+    </script>
+{% endblock %}

@@ -1,0 +1,197 @@
+{% extends 'base.html' %}
+
+{% macro page_selector(page) %}
+    <!-- The CSS styling here makes sure that each button is the same width, and as such the
+    pagination size is consistent on every page -->
+    <li class="page-item {% if page == current_page %}active{% endif %}">
+        <a class="page-link" style="width:4ch; padding-left:0; padding-right:0; text-align:center"
+           href="{{ url_for('stocklist_route', page=page) }}">{{ page }}</a>
+    </li>
+{% endmacro %}
+
+{% macro page_select() %}
+
+    {% if page_count > 1 %}
+        <nav aria-label="Stock page navigation">
+            <ul class="pagination justify-content-center">
+                <li class="page-item{% if current_page == 1 %} disabled{% endif %}">
+                    <a class="page-link" href="{{ url_for('stocklist_route', page=(current_page|int) - 1) }}"
+                       aria-label="Previous">
+                        <span aria-hidden="true">&laquo;</span>
+                    </a>
+                </li>
+                {% if current_page <= 5 %}
+                    {% for page in range(1, 8) %}
+                        {{ page_selector(page) }}
+                    {% endfor %}
+                    <li class="page-item disabled">
+                        <div class="page-link">...</div>
+                    </li>
+                    {{ page_selector(page_count) }}
+                {% elif current_page + 5 > page_count %}
+                    {{ page_selector(1) }}
+                    <li class="page-item disabled">
+                        <div class="page-link">...</div>
+                    </li>
+                    {% for page in range(page_count - 7, page_count + 1) %}
+                        {{ page_selector(page) }}
+                    {% endfor %}
+                {% else %}
+                    {{ page_selector(1) }}
+                    <li class="page-item disabled">
+                        <div class="page-link">...</div>
+                    </li>
+                    {% for page in range(current_page - 2, current_page + 3) %}
+                        {{ page_selector(page) }}
+                    {% endfor %}
+                    <li class="page-item disabled">
+                        <div class="page-link">...</div>
+                    </li>
+                    {{ page_selector(page_count) }}
+                {% endif %}
+                <li class="page-item{% if current_page == page_count %} disabled{% endif %}">
+                    <a class="page-link" href="{{ url_for('stocklist_route', page=(current_page|int) + 1) }}"
+                       aria-label="Next">
+                        <span aria-hidden="true">&raquo;</span>
+                    </a>
+                </li>
+            </ul>
+        </nav>
+    {% endif %}
+
+{% endmacro %}
+
+{% block content %}
+
+    <h1>{% if heading %}{{ heading }}{% endif %}</h1>
+
+    <button aria-label="Reload Stocks" id="update_button" type="button" class="btn btn-scarlet"
+            onclick="updateStocks()">
+        <svg id="update_icon" xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor"
+             class="bi bi-arrow-clockwise"
+             viewBox="0 0 16 16">
+            <path fill-rule="evenodd" d="M8 3a5 5 0 1 0 4.546 2.914.5.5 0 0 1 .908-.417A6 6 0 1 1 8 2v1z"/>
+            <path d="M8 4.466V.534a.25.25 0 0 1 .41-.192l2.36 1.966c.12.1.12.284 0 .384L8.41 4.658A.25.25 0 0 1 8 4.466z"/>
+        </svg>
+    </button>
+    <br/>
+    {{ page_select() }}
+
+    <table class="table table-hover">
+        <thead>
+        <tr>
+            {%- for column in stock_data[0] %}
+                <th scope="col" class="fs-6">{{ column }}</th>{%- endfor %}
+        </tr>
+        </thead>
+        <tbody id="table_results_body">
+        {%- for stock in stock_data %}
+            <tr>{%- for item in stock %}
+                <td>
+                    {%- if loop.index0 == 0 %}
+                        <a href="{{ url_for('profile_route', exchange=stock['exchange'], ticker=stock['code']) }}"
+                           class="fs-6">{{ stock[item] }}</a>
+                        {% if current_user.is_authenticated %}
+                            <a class="btn btn-link"
+                               onclick="modifyWatchlist('{{ stock['code'] }}', '{{ stock['exchange'] }}')">
+                                <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor"
+                                     class="bi bi-bookmark-dash" viewBox="0 0 16 16"
+                                     id="{{ stock['code'] }}{{ stock['exchange'] }}">
+                                    {% if stock['code'] in watchlist_data[stock['exchange']] %}
+                                        <path class="stock_selected" fill-rule="evenodd"
+                                              d="M2 15.5V2a2 2 0 0 1 2-2h8a2 2 0 0 1 2 2v13.5a.5.5 0 0 1-.74.439L8 13.069l-5.26 2.87A.5.5 0 0 1 2 15.5zM8.16 4.1a.178.178 0 0 0-.32 0l-.634 1.285a.178.178 0 0 1-.134.098l-1.42.206a.178.178 0 0 0-.098.303L6.58 6.993c.042.041.061.1.051.158L6.39 8.565a.178.178 0 0 0 .258.187l1.27-.668a.178.178 0 0 1 .165 0l1.27.668a.178.178 0 0 0 .257-.187L9.368 7.15a.178.178 0 0 1 .05-.158l1.028-1.001a.178.178 0 0 0-.098-.303l-1.42-.206a.178.178 0 0 1-.134-.098L8.16 4.1z"/>
+                                    {% else %}
+                                        <path class="stock_unselected" fill-rule="evenodd"
+                                              d="M5.5 6.5A.5.5 0 0 1 6 6h4a.5.5 0 0 1 0 1H6a.5.5 0 0 1-.5-.5z"/>
+                                        <path d="M2 2a2 2 0 0 1 2-2h8a2 2 0 0 1 2 2v13.5a.5.5 0 0 1-.777.416L8 13.101l-5.223 2.815A.5.5 0 0 1 2 15.5V2zm2-1a1 1 0 0 0-1 1v12.566l4.723-2.482a.5.5 0 0 1 .554 0L13 14.566V2a1 1 0 0 0-1-1H4z"/>
+                                    {% endif %}
+                                </svg>
+                            </a>
+                        {% endif %}
+                    {%- else %}
+                        <p class="fs-6">{{- stock[item] }}</p>
+                    {%- endif %}
+                </td>
+            {%- endfor %}
+            </tr>
+        {%- endfor %}
+        </tbody>
+    </table>
+
+    {{ page_select() }}
+
+{% endblock %}
+
+{% block scripts %}
+    <script>
+
+        function updateStocks() {
+
+            let update_button = document.getElementById('update_button');
+            let update_icon = document.getElementById('update_icon');
+            update_icon.classList.add('rotate');
+            update_button.disabled = true;
+
+            //Creating AJAX object and variables
+            let ajax = new XMLHttpRequest();
+            let method = 'POST';
+            let url = '{{ url_for('ajax_update_stocks') }}';
+            let asynchronous = true;
+
+            //open and send AJAX request using XMLH object
+            ajax.open(method, url, asynchronous);
+            ajax.setRequestHeader('Content-type', 'application/x-www-form-urlencoded');
+            ajax.send();
+
+            //receive response from query
+            ajax.onreadystatechange = function () {
+                if (this.readyState === 4 && this.status === 200) {
+                    let output_data = JSON.parse(this.responseText);
+                    console.log(output_data);
+
+                    document.location.reload(true)
+
+                }
+
+            }
+        }
+
+
+        function modifyWatchlist(code, exchange) {
+
+            //Creating AJAX object and variables
+            let ajax = new XMLHttpRequest();
+            let method = 'POST';
+            let url = '{{ url_for('modify_watchlist') }}';
+            let asynchronous = true;
+            let button_clicked = document.getElementById(code + exchange);
+            if (button_clicked.children[0].classList.contains('stock_unselected')) {
+                var instruction = 'add';
+            }
+            else {
+                var instruction = 'remove';
+            }
+
+            //open and send AJAX request using XMLH object
+            ajax.open(method, url, asynchronous);
+            ajax.setRequestHeader('Content-type', 'application/x-www-form-urlencoded');
+            ajax.send('code=' + code + '&exchange=' + exchange + '&instruction=' + instruction);
+
+            //receive response from query
+            ajax.onreadystatechange = function () {
+                if (this.readyState === 4 && this.status === 200) {
+                    let output_data = this.responseText;
+                    console.log(output_data);
+
+                    if (instruction === 'add') {
+                        button_clicked.innerHTML = '<path fill-rule="evenodd" d="M2 15.5V2a2 2 0 0 1 2-2h8a2 2 0 0 1 2 2v13.5a.5.5 0 0 1-.74.439L8 13.069l-5.26 2.87A.5.5 0 0 1 2 15.5zM8.16 4.1a.178.178 0 0 0-.32 0l-.634 1.285a.178.178 0 0 1-.134.098l-1.42.206a.178.178 0 0 0-.098.303L6.58 6.993c.042.041.061.1.051.158L6.39 8.565a.178.178 0 0 0 .258.187l1.27-.668a.178.178 0 0 1 .165 0l1.27.668a.178.178 0 0 0 .257-.187L9.368 7.15a.178.178 0 0 1 .05-.158l1.028-1.001a.178.178 0 0 0-.098-.303l-1.42-.206a.178.178 0 0 1-.134-.098L8.16 4.1z"/>';
+                    } else {
+                        button_clicked.innerHTML = '<path class="stock_unselected" fill-rule="evenodd" d="M5.5 6.5A.5.5 0 0 1 6 6h4a.5.5 0 0 1 0 1H6a.5.5 0 0 1-.5-.5z"/>\n' +
+                            '<path d="M2 2a2 2 0 0 1 2-2h8a2 2 0 0 1 2 2v13.5a.5.5 0 0 1-.777.416L8 13.101l-5.223 2.815A.5.5 0 0 1 2 15.5V2zm2-1a1 1 0 0 0-1 1v12.566l4.723-2.482a.5.5 0 0 1 .554 0L13 14.566V2a1 1 0 0 0-1-1H4z"/>\n';
+
+                    }
+                }
+            }
+        }
+    </script>
+{% endblock %}
