@@ -22,7 +22,7 @@ app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
 # set the type and location of the DB
 app.config['SQLALCHEMY_DATABASE_URI'] = 'sqlite:///stocks.db'
 # make sure this key stays secret
-app.config['SECRET_KEY'] = 'The Queen\'s Gambit'
+app.config['SECRET_KEY'] = environ.get('SECRET_KEY') or sha224(b'A very hard t0 guess password').hexdigest()
 
 
 # class name has to match the table name
@@ -93,7 +93,8 @@ def home_route():
     biggest_volume = select_extreme('volume', 'stocks', 1, order='DESC')[0]
     add_historic_data(best_change['code'], best_change['exchange'], datetime(2016, 1, 1))
     # add_historic_data(worst_change['code'], worst_change['exchange'], datetime(2016, 1, 1))
-    best_stock_history = select_conditions('historic_prices', '*', code=best_change['code'], exchange=best_change['exchange'])
+    best_stock_history = select_conditions('historic_prices', '*', code=best_change['code'],
+                                           exchange=best_change['exchange'])
     # worst_stock_history = add_historic_data(worst_change['code'], worst_change['exchange'], datetime(2016, 1, 1))
     stock_data = {'best': {'data': best_change, 'history': best_stock_history},
                   'worst': {'data': worst_change},
