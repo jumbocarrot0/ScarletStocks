@@ -91,6 +91,8 @@ def add_historic_data(ticker, exchange, start_date):
             stock_history = get_historic_data('XASX:' + ticker, start_date)
         except com_error:
             pass
+        except noStockData:
+            return
     print('stock_history:', stock_history)
     # stock_data[0] is the date, stock_data[1] is the price
 

@@ -5,6 +5,7 @@ def execute_sql(sql_statement, sql_params):
     # Creates connection, executes code and commits changes
     connie = create_connection()
     c = connie.cursor()
+    # print(sql_statement)
     c.execute(sql_statement, sql_params)
     # Collects any selected data
     data = c.fetchall()
@@ -94,7 +95,7 @@ def select_specific_columns(table, *columns):
     for column in columns:
         sql_query += column + ','
     sql_query = sql_query[:-1] + ' FROM ' + table
-    print(sql_query)
+    # print(sql_query)
     data = execute_sql(sql_query, ())
     return data
 
@@ -107,35 +108,23 @@ def select_one(exchange, ticker):
 def select_conditions(table, *selected_columns, query_limit=None, order_by=None, **conditions):
     sql_query = 'SELECT '
     for column in selected_columns:
-        sql_query += column + ' '
-    sql_query += 'FROM ' + table
+        sql_query += column + ', '
+    sql_query = sql_query[:-2] + ' FROM ' + table
     if conditions:
         sql_query += ' WHERE '
         for condition in conditions:
             sql_query += condition + ' = ? AND '
         sql_query = sql_query[:-5]
     if order_by:
+        if conditions:
+            sql_query += ' AND '
+        else:
+            sql_query += ' WHERE '
         # Also excludes values in the order_by column that are NULL as it interferes with ORDER BY
-        sql_query += ' AND ' + order_by.replace(' DESC', '').replace(' ASC', '') + ' NOT NULL ORDER BY ' + order_by
+        sql_query += order_by.replace(' DESC', '').replace(' ASC', '') + ' NOT NULL ORDER BY ' + order_by
     if query_limit:
         sql_query += ' LIMIT ' + str(query_limit)
     sql_params = tuple([conditions[i] for i in conditions])
-    print(sql_query, sql_params)
-    data = execute_sql(sql_query, sql_params)
-    return data
-
-
-def select_extreme(column, table, limit, order='ASC', all_columns=False, alias=None):
-    if all_columns:
-        if alias:
-            sql_query = 'SELECT *, ' + column + ' AS ' + alias + ' FROM ' + table + ' WHERE ' + alias + ' NOT NULL ORDER BY ' + alias + ' ' + order + ' LIMIT ?'
-        else:
-            sql_query = 'SELECT *, ' + column + ' FROM ' + table + ' WHERE ' + column + ' NOT NULL ORDER BY ' + column + ' ' + order + ' LIMIT ?'
-    else:
-        if not alias:
-            alias = column
-        sql_query = 'SELECT name, code, exchange, ' + column + ' AS ' + alias + ' FROM ' + table + ' WHERE ' + alias + ' NOT NULL ORDER BY ' + alias + ' ' + order + ' LIMIT ?'
-    sql_params = (limit,)
-    print(sql_query)
+    # print(sql_query, sql_params)
     data = execute_sql(sql_query, sql_params)
     return data

@@ -1,13 +1,12 @@
 {% extends 'base.html' %}
 
 {% block content %}
-    <div class="bg-dark text-white"
-         style="background: url('/static/home_bg_2.jpg') no-repeat center center;
+    <div class="bg-dark text-white vh-100"
+         style="background: url('/static/home_bg_4.jpg') no-repeat center center;
             -webkit-background-size: 100% 100%;
             -moz-background-size: 100% 100%;
             -o-background-size: 100% 100%;
             background-size: 100% 100%;
-            height: 100vh;
             padding: 30vh 10%">
         <div class="container">
             <h1 class="display-4 fw-bold">ScarletStocks</h1>
@@ -15,52 +14,62 @@
             <a class="btn btn-scarlet btn-lg" href="{{ url_for('stocklist_route', page=1) }}" role="button">Explore</a>
         </div>
     </div>
-    <div class="bg-dark text-white"
-         style="background: url('/static/home_bg_3.jpg') no-repeat center center;
+    <div class="bg-dark text-white vh-100"
+         style="background: url('/static/home_bg_2.jpg') no-repeat center center;
             -webkit-background-size: 100% 100%;
             -moz-background-size: 100% 100%;
             -o-background-size: 100% 100%;
             background-size: 100% 100%;
-            height: 100vh;
-            padding: 10vh 10%">
+            padding: 15vh 10%">
         <div class="container">
-            <div class="row">
+            <div class="row h-100">
                 <div class="col-4">
-                    <div class="card text-white bg-success ">
-                        <div class="card-body">
-                            <h5 class="card-title">Biggest gain</h5>
-                            <p class="card-text">{{ stock_data['best']['data']['name'] }}<br/>
-                                {{ (stock_data['best']['data']['pctChange']|float*10000)|round/100 }}%</p>
-                            <p class="card-text">
-                                <small class="text-white">Last updated 3 mins ago</small>
-                            </p>
+                    <div class="row"></div>
+                    <div class="row">
+                        <div class="card text-white bg-success ">
+                            <div class="card-body">
+                                <h5 class="card-title">Biggest gain</h5>
+                                <p class="card-text">{{ stock_data['best']['data']['name'] }}<br/>
+                                    {{ (stock_data['best']['data']['pctChange']|float*10000)|round/100 }}%</p>
+                                <p class="card-text">
+                                    <small class="text-white">Last trade
+                                        time {{ stock_data['best']['data']['lastTradeTime'] }}</small>
+                                </p>
+                            </div>
                         </div>
                     </div>
-                    <br/>
-                    <div class="card text-white bg-danger">
-                        <div class="card-body">
-                            <h5 class="card-title">Biggest loss</h5>
-                            <p class="card-text">{{ stock_data['worst']['data']['name'] }}<br/>
-                                {{ (stock_data['worst']['data']['pctChange']|float*10000)|round/100 }}%</p>
-                            <p class="card-text">
-                                <small class="text-white">Last updated 3 mins ago</small>
-                            </p>
+                    <div class="row"></div>
+                    <div class="row">
+                        <div class="card text-white bg-danger">
+                            <div class="card-body">
+                                <h5 class="card-title">Biggest loss</h5>
+                                <p class="card-text">{{ stock_data['worst']['data']['name'] }}<br/>
+                                    {{ (stock_data['worst']['data']['pctChange']|float*10000)|round/100 }}%</p>
+                                <p class="card-text">
+                                    <small class="text-white">Last trade
+                                        time {{ stock_data['worst']['data']['lastTradeTime'] }}</small>
+                                </p>
+                            </div>
                         </div>
                     </div>
-                    <br/>
-                    <div class="card bg-info">
-                        <div class="card-body">
-                            <h5 class="card-title">Biggest Volume</h5>
-                            <p class="card-text">{{ stock_data['biggest_volume']['data']['name'] }}<br/>
-                                {{ stock_data['biggest_volume']['data']['volume'] }}</p>
-                            <p class="card-text">
-                                <small>Last updated 3 mins ago</small>
-                            </p>
+                    <div class="row"></div>
+                    <div class="row">
+                        <div class="card bg-info">
+                            <div class="card-body">
+                                <h5 class="card-title">Biggest Volume</h5>
+                                <p class="card-text">{{ stock_data['biggest_volume']['data']['name'] }}<br/>
+                                    {{ stock_data['biggest_volume']['data']['volume'] }}</p>
+                                <p class="card-text">
+                                    <small class="text-white">Last trade
+                                        time {{ stock_data['biggest_volume']['data']['lastTradeTime'] }}</small>
+                                </p>
+                            </div>
                         </div>
                     </div>
+                    <div class="row"></div>
                 </div>
                 <div class="col-8">
-                    <canvas id="bestChangeChart" width="100%" height="0.5vh"></canvas>
+                    <canvas id="bestChangeChart" width="100%" height="100%"></canvas>
                 </div>
             </div>
         </div>
@@ -75,15 +84,14 @@
             type: 'line',
             data: {
                 'labels': [{% for price in stock_data['best']['history'] %}
-                    '{{ price['date'] }}'{% if not loop.last %}, {% endif %}
+                    '{{ price['date'][:10] }}'{% if not loop.last %}, {% endif %}
                 {% endfor %}],
                 'datasets': [{
-                    label: "Best Change",
-                    {#backgroundColor: ["#3e95cd", "#8e5ea2", "#3cba9f", "#e8c3b9",#}
-                    {#    "#c45850", "#3e95cd", "#8e5ea2", "#3cba9f"],#}
+                    label: 'Price',
+                    borderColor: 'rgba(0, 0, 0, 1)',
                     data: [{% for price in stock_data['best']['history'] %}
-                    {{ price['price'] }}{% if not loop.last %}, {% endif %}
-                {% endfor %}]
+                        {{ price['price'] }}{% if not loop.last %}, {% endif %}
+                    {% endfor %}]
                 }]
             },
             options: {

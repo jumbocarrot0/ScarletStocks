@@ -88,13 +88,19 @@ def inject_watchlist():
 
 @app.route('/')
 def home_route():
-    best_change = select_extreme("price_day_change/price", 'stocks', 1, alias='pctChange', order='DESC')[0]
-    worst_change = select_extreme("price_day_change/price", 'stocks', 1, alias='pctChange', order='ASC')[0]
-    biggest_volume = select_extreme('volume', 'stocks', 1, order='DESC')[0]
+    pctChangeColumn = 'price_day_change/price AS pctChange'
+    best_change = select_conditions('stocks', 'code', 'exchange', 'name', 'lastTradeTime', pctChangeColumn,
+                                    query_limit=1, order_by='pctChange DESC')[0]
+    worst_change = select_conditions('stocks', 'code', 'exchange', 'name', 'lastTradeTime', pctChangeColumn,
+                                     query_limit=1, order_by='pctChange ASC')[0]
+    biggest_volume = select_conditions('stocks', 'code', 'exchange', 'name', 'lastTradeTime', 'volume',
+                                       query_limit=1, order_by='volume DESC')[0]
+    # THIS MAKES WEBSITE SLOW
     add_historic_data(best_change['code'], best_change['exchange'], datetime(2016, 1, 1))
     # add_historic_data(worst_change['code'], worst_change['exchange'], datetime(2016, 1, 1))
-    best_stock_history = select_conditions('historic_prices', '*', code=best_change['code'],
+    best_stock_history = select_conditions('historic_prices', '*', order_by='date DESC', query_limit=30, code=best_change['code'],
                                            exchange=best_change['exchange'])
+    best_stock_history.reverse()
     # worst_stock_history = add_historic_data(worst_change['code'], worst_change['exchange'], datetime(2016, 1, 1))
     stock_data = {'best': {'data': best_change, 'history': best_stock_history},
                   'worst': {'data': worst_change},
@@ -192,7 +198,9 @@ def portfolio_add_route():
 
 @app.route('/top5')
 def top5_route():
-    stock_data = select_extreme("price_day_change/price", 'stocks', 5, alias='pctChange', order='DESC')
+    pctChangeColumn = 'price_day_change/price AS pctChange'
+    stock_data = select_conditions('stocks', 'code', 'exchange', 'name', 'lastTradeTime', pctChangeColumn,
+                                    query_limit=5, order_by='pctChange DESC')
     return render_template('stocklist.html', title='ScarletStocks - Top5',
                            stock_data=stock_data, heading='TOP 5',
                            page_count=1)
@@ -200,7 +208,9 @@ def top5_route():
 
 @app.route('/bottom5')
 def bottom5_route():
-    stock_data = select_extreme("price_day_change/price", 'stocks', 1000, alias='pctChange', order='ASC')
+    pctChangeColumn = 'price_day_change/price AS pctChange'
+    stock_data = select_conditions('stocks', 'code', 'exchange', 'name', 'lastTradeTime', pctChangeColumn,
+                                    query_limit=5, order_by='pctChange ASC')
     return render_template('stocklist.html', title='ScarletStocks - Bottom5',
                            stock_data=stock_data, heading='BOTTOM 5',
                            page_count=1)

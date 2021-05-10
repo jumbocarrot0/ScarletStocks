@@ -8,6 +8,9 @@ from atexit import register
 
 returned_values = []
 
+class noStockData(Exception):
+    """Raised when there is no stock data to retrieve"""
+
 
 # ---------------- OLD EXCEL METHODS TO GET STOCK DATA - PYASX IS USED NOW ----------------------
 #
@@ -154,6 +157,9 @@ def get_historic_data_2(excel, workbook, ticker, start_date):
         retries += 1
         pass
     if excel.Cells(1, 1).Value == -2146826237:
-        return
+        workbook.Close(SaveChanges=False)
+        excel.Quit()
+        raise noStockData
+
 
     read_workbook(excel, workbook, [1, 2])
