@@ -62,13 +62,14 @@ def load_user(user_id):
 # ----------------------- Context Processors -----------------------------
 
 # These are essentially global variables for jinja templates
-# This one creates a 'global variable' for the number of items in the user's cart.
+# This one creates a 'global variable' for stocks to be used in the search bar's auto-fill
 @app.context_processor
 def inject_stock_names():
-    stock_data = select_specific_columns('stocks', 'name')
+    stock_data = select_specific_columns('stocks', 'code', 'exchange', 'name')
     return dict(global_stock_data=stock_data)
 
 
+# This one gives a list of stocks in the user's watchlists
 @app.context_processor
 def inject_watchlist():
     if current_user.is_authenticated:
@@ -98,7 +99,8 @@ def home_route():
     # THIS MAKES WEBSITE SLOW
     add_historic_data(best_change['code'], best_change['exchange'], datetime(2016, 1, 1))
     # add_historic_data(worst_change['code'], worst_change['exchange'], datetime(2016, 1, 1))
-    best_stock_history = select_conditions('historic_prices', '*', order_by='date DESC', query_limit=30, code=best_change['code'],
+    best_stock_history = select_conditions('historic_prices', 'price', 'date', order_by='date DESC', query_limit=30,
+                                           code=best_change['code'],
                                            exchange=best_change['exchange'])
     best_stock_history.reverse()
     # worst_stock_history = add_historic_data(worst_change['code'], worst_change['exchange'], datetime(2016, 1, 1))
@@ -200,7 +202,7 @@ def portfolio_add_route():
 def top5_route():
     pctChangeColumn = 'price_day_change/price AS pctChange'
     stock_data = select_conditions('stocks', 'code', 'exchange', 'name', 'lastTradeTime', pctChangeColumn,
-                                    query_limit=5, order_by='pctChange DESC')
+                                   query_limit=5, order_by='pctChange DESC')
     return render_template('stocklist.html', title='ScarletStocks - Top5',
                            stock_data=stock_data, heading='TOP 5',
                            page_count=1)
@@ -210,7 +212,7 @@ def top5_route():
 def bottom5_route():
     pctChangeColumn = 'price_day_change/price AS pctChange'
     stock_data = select_conditions('stocks', 'code', 'exchange', 'name', 'lastTradeTime', pctChangeColumn,
-                                    query_limit=5, order_by='pctChange ASC')
+                                   query_limit=5, order_by='pctChange ASC')
     return render_template('stocklist.html', title='ScarletStocks - Bottom5',
                            stock_data=stock_data, heading='BOTTOM 5',
                            page_count=1)
@@ -258,19 +260,15 @@ def register_route():
         # Backend email validation
         if len(input_data['inputEmail'].split('@')) != 2:
             flash('Your email is invalid')
-            return redirect(request.url)
+            return redirect(url_for('register_route'))
 
-        uniqueEmail = False
-        # Checks if the email is already being used. This check should fail
-        try:
-            # Selects user with the given email
-            Users.query.filter_by(email=input_data['inputEmail']).first()
-        except:
-            uniqueEmail = True
+        # Creates a list of entered emails that will be checked against
+        # the entered  email to prevent duplicate emails.
+        user_emails = select_specific_columns('users', 'email')
 
-        if not uniqueEmail:
+        if input_data['inputEmail'] in user_emails:
             flash('The email provided is already being used. Please select another one')
-            return redirect(request.url)
+            return redirect(url_for('register_route'))
         else:
             add_user(input_data['inputFirstname'],
                      input_data['inputSurname'],
@@ -303,6 +301,12 @@ def invalid_page(e):
     return redirect(url_for('home_route'))
 
 
+# Loads this page if an internal server error happens.
+@app.errorhandler(500)
+def invalid_page(e):
+    return render_template('500error.html')
+
+
 # Redirects user to login page if they access any login-restricted page.
 @app.errorhandler(401)
 def invalid_page(e):
@@ -323,17 +327,21 @@ def ajax_update_stocks():
     return json.dumps(stock_data)
 
 
+@app.route('/return_stocks_data', methods=['POST'])
+def ajax_get_stock_data():
+    code = request.form['code']
+    exchange = request.form['exchange']
+
+    stock_data = select_one(exchange, code)
+
+    return json.dumps(stock_data)
+
+
 @app.route('/modify_watchlist', methods=['POST'])
 def modify_watchlist():
-    print('AddWatchlist1')
-    userID = current_user.id
-    print(userID)
     code = request.form['code']
-    print(code)
     exchange = request.form['exchange']
-    print(exchange)
     instruction = request.form['instruction']
-    print(instruction)
     if instruction == 'add':
         add_to_sql_table('watchlists', userID=current_user.id, code=code, exchange=exchange, timeAdded=datetime.now())
     elif instruction == 'remove':

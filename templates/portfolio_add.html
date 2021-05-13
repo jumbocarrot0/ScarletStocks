@@ -8,7 +8,7 @@
 
 
             <div class="form-floating">
-                <input type="text" name="inputExchange" class="form-control" id="floatingInputExchange"
+                <input type="text" name="inputExchange" class="form-control" id="inputExchange"
                        placeholder="Australian Securities Exchange" list="datalistExchanges" required>
                 <label for="floatingInputExchange">Exchange</label>
                 <datalist id="datalistExchanges">
@@ -25,47 +25,86 @@
             </div>
             <br/>
             <div class="form-floating">
-                <input type="text" name="inputCode" class="form-control" id="floatingInputCode"
-                       placeholder="AAA" list="datalistCodes" required>
+                <input type="text" name="inputCode" class="form-control" id="inputCode"
+                       placeholder="AAA" list="datalistCodes" onchange="onTickerCodeChange()" required>
                 <label for="floatingInput2">Ticker Code</label>
                 <datalist id="datalistCodes">
-{#                    {% for stock in global_stock_data %}#}
-{#                        <option value="{{ stock['code'] }}"></option>#}
-{#                    {% endfor %}#}
+                    {#                    {% for stock in global_stock_data %}#}
+                    {#                        <option value="{{ stock['code'] }}"></option>#}
+                    {#                    {% endfor %}#}
                 </datalist>
             </div>
             <br/>
             <div class="form-floating">
-                <input type="number" name="inputQuantity" class="form-control" id="floatingInputQuantity"
-                       placeholder="10" style="margin-bottom: -1px; border-bottom-right-radius: 0;
+                <input type="number" name="inputQuantity" class="form-control" id="inputQuantity"
+                       placeholder="10" style="border-bottom-right-radius: 0;
                        border-bottom-left-radius: 0;" min="1" required>
                 <label for="floatingInputQuantity">Quantity</label>
             </div>
             <div class="form-floating">
-                <input type="number" name="inputPrice" class="form-control" id="floatingInputPrice"
-                       placeholder="10" style="margin-bottom: -1px; border-radius: 0" min="0.01" step="0.01" required>
+                <input type="number" name="inputPrice" class="form-control" id="inputPrice"
+                       placeholder="10" style="border-radius: 0" min="0.01" step="0.01" required>
                 <label for="floatingInputPrice">Price Bought</label>
             </div>
             <div class="form-floating">
-                <input type="date" name="inputDateBought" class="form-control" id="floatingInputDateBought"
+                <input type="date" name="inputDateBought" class="form-control" id="inputDateBought"
                        value="{{ current_time['date'] }}" min="1900-01-01" max="{{ current_time['date'] }}"
-                       placeholder="dd/mm/yyyy" style="margin-bottom: -1px; border-radius: 0;" required>
+                       placeholder="dd/mm/yyyy" style="border-radius: 0;" required>
                 <label for="floatingInputDateBought">Purchase Date</label>
             </div>
             <div class="form-floating">
-                <input type="time" name="inputTimeBought" class="form-control" id="floatingInputTimeBought"
+                <input type="time" name="inputTimeBought" class="form-control" id="inputTimeBought"
                        value="{{ current_time['time'] }}" placeholder="--:-- --" style="border-top-right-radius: 0;
                        border-top-left-radius: 0;" required>
                 <label for="floatingInputTimeBought">Purchase Time</label>
             </div>
             <br/>
-            <button class="w-100 btn btn-lg btn-primary" type="submit">Add Stock</button>
+            <button class="w-100 btn btn-lg btn-scarlet" type="submit">Add Stock</button>
         </form>
     </div>
 {% endblock %}
 
 {% block scripts %}
     <script>
+
+        function onTickerCodeChange() {
+
+            const codeInput = document.getElementById('inputCode');
+            const exchangeInput = document.getElementById('inputExchange');
+
+            //Creating AJAX object and variables
+            let ajax = new XMLHttpRequest();
+            let method = 'POST';
+            let url = '{{ url_for('ajax_get_stock_data') }}';
+            let asynchronous = true;
+
+            //open and send AJAX request using XMLH object
+            ajax.open(method, url, asynchronous);
+            ajax.setRequestHeader('Content-type', 'application/x-www-form-urlencoded');
+            ajax.send('code=' + codeInput.value + '&exchange=' + exchangeInput.value);
+
+            //receive response from query
+            ajax.onreadystatechange = function () {
+                if (this.readyState === 4 && this.status === 200) {
+                    let output_data = JSON.parse(this.responseText)[0];
+                    console.log(output_data);
+                    console.log(output_data['price']);
+
+                    if (output_data === []){
+                        console.log('BAD')
+                    } else {
+                        {#const quantityInput = document.getElementById('inputQuantity');#}
+                        const priceInput = document.getElementById('inputPrice');
+                        {#const dateBoughtInput = document.getElementById('inputDateBought');#}
+                        priceInput.value = output_data['price']
+
+                    }
+
+                }
+
+            }
+        }
+
         // Example starter JavaScript for disabling form submissions if there are invalid fields
         (function () {
             'use strict';

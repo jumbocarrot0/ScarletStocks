@@ -104,6 +104,10 @@ def add_historic_data(ticker, exchange, start_date):
         # this skips and rows containing them
         if -2146826246 in stock_data:
             continue
+        # idk what this is, but it comes up sometimes so it just checks for it.
+        elif -2146826242 in stock_data:
+            print('-2146826242')
+            return
         stock_date = parse(str(stock_data[0]))
         stock_price = str(stock_data[1])
         add_to_sql_table('historic_prices',
@@ -154,7 +158,7 @@ def remove_from_sql_table(table, **columns):
     sql_statement = 'DELETE FROM ' + table + ' WHERE'
     for column in columns:
         sql_statement += ' ' + column + '=? AND'
-        sql_statement = sql_statement[:-4]
+    sql_statement = sql_statement[:-4]
 
     # Creates a tuple of entry values to be substituted in the statement
     sql_params = tuple(columns.values())

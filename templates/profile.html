@@ -8,12 +8,12 @@
             <h2 class="card-title">{{ stock_data['name'] }}</h2>
             {% if current_user.is_authenticated %}
                 {% if stock_data['code'] in watchlist_data[stock_data['exchange']] %}
-                    <button id="btn_watchlist" class="btn btn-lg btn-primary watchlist_remove"
+                    <button id="btn_watchlist" class="btn btn-lg btn-scarlet watchlist_remove"
                             onclick="modifyWatchlist()"
                             type="button">
                     Remove from Watchlist
                 {% else %}
-                    <button id="btn_watchlist" class="btn btn-lg btn-primary watchlist_add"
+                    <button id="btn_watchlist" class="btn btn-lg btn-scarlet watchlist_add"
                             onclick="modifyWatchlist()" type="button">
                     Add to Watchlist
                 {% endif %}

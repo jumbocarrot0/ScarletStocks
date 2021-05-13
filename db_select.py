@@ -91,7 +91,7 @@ def select_search(input):
 
 
 def select_specific_columns(table, *columns):
-    sql_query = 'SELECT code, exchange, '
+    sql_query = 'SELECT '
     for column in columns:
         sql_query += column + ','
     sql_query = sql_query[:-1] + ' FROM ' + table
