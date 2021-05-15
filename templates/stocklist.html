@@ -5,7 +5,7 @@
     pagination size is consistent on every page -->
     <li class="page-item {% if page == current_page %}active{% endif %}">
         <a class="page-link" style="width:4ch; padding-left:0; padding-right:0; text-align:center"
-           href="{{ url_for('stocklist_route', page=page) }}">{{ page }}</a>
+           href="{{ url_for('stocklist_route', exchange=exchange, page=page) }}">{{ page }}</a>
     </li>
 {% endmacro %}
 
@@ -15,7 +15,7 @@
         <nav aria-label="Stock page navigation">
             <ul class="pagination justify-content-center">
                 <li class="page-item{% if current_page == 1 %} disabled{% endif %}">
-                    <a class="page-link" href="{{ url_for('stocklist_route', page=(current_page|int) - 1) }}"
+                    <a class="page-link" href="{{ url_for('stocklist_route', exchange=exchange, page=(current_page|int) - 1) }}"
                        aria-label="Previous">
                         <span aria-hidden="true">&laquo;</span>
                     </a>
@@ -50,7 +50,7 @@
                     {{ page_selector(page_count) }}
                 {% endif %}
                 <li class="page-item{% if current_page == page_count %} disabled{% endif %}">
-                    <a class="page-link" href="{{ url_for('stocklist_route', page=(current_page|int) + 1) }}"
+                    <a class="page-link" href="{{ url_for('stocklist_route', exchange=exchange, page=(current_page|int) + 1) }}"
                        aria-label="Next">
                         <span aria-hidden="true">&raquo;</span>
                     </a>
@@ -144,21 +144,23 @@
             let url = '{{ url_for('ajax_update_stocks') }}';
             let asynchronous = true;
 
+            const visible_codes = [{%- for stock in stock_data -%}
+                '{{ stock['code'] }}'{% if not loop.last %}, {% endif %}
+            {%- endfor -%}];
+
             //open and send AJAX request using XMLH object
             ajax.open(method, url, asynchronous);
             ajax.setRequestHeader('Content-type', 'application/x-www-form-urlencoded');
-            ajax.send();
+            ajax.send('visibleCodes=' + visible_codes);
 
             //receive response from query
             ajax.onreadystatechange = function () {
                 if (this.readyState === 4 && this.status === 200) {
                     let output_data = JSON.parse(this.responseText);
-                    console.log(output_data);
-
-                    document.location.reload(true)
-
+                    if (output_data === 'success') {
+                        document.location.reload(true)
+                    }
                 }
-
             }
         }
 

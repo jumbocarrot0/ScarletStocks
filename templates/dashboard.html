@@ -1,4 +1,5 @@
 {% extends 'base.html' %}
+{% from 'macros.html' import timeCartesianChart %}
 
 {% block content %}
     <div class="bg-dark text-white vh-100"
@@ -11,7 +12,7 @@
         <div class="container">
             <h1 class="display-4 fw-bold">ScarletStocks</h1>
             <p class="lead">Making trading easier.</p>
-            <a class="btn btn-scarlet btn-lg" href="{{ url_for('stocklist_route', page=1) }}" role="button">Explore</a>
+            <a class="btn btn-scarlet btn-lg" href="{{ url_for('exchangelist_route') }}" role="button">Explore</a>
         </div>
     </div>
     <div class="bg-dark text-white vh-100"
@@ -65,8 +66,8 @@
                     </div>
                 </div>
                 <div class="col-8">
-                    <canvas style="background-color: rgba(0, 0, 0, 0.75); padding: 10px"
-                            id="bestChangeChart" width="100%" height="70vh"></canvas>
+                    <canvas style="background-color: rgba(0, 0, 0, 0.75); padding: 10px; width: 100%; height: 70vh"
+                            id="bestChangeChart"></canvas>
                 </div>
             </div>
         </div>
@@ -75,48 +76,5 @@
 {% endblock %}
 
 {% block scripts %}
-    <script>
-
-        /* this code is to create the graph with chartjs.
-        The x-axis is created to be evenly spread by date. */
-        var ctx = document.getElementById('bestChangeChart').getContext('2d');
-        const config = {
-            type: 'line',
-            options: {
-                scales: {
-                    xAxes: [{
-                        type: 'time',
-                        ticks: {
-                            fontColor: "rgba(255, 255, 255, 1)",
-                        }
-                    }],
-                    yAxes: [{
-                        ticks: {
-                            fontColor: "rgba(255, 255, 255, 1)",
-                        }
-                    }]
-                }
-            },
-            data: {
-                labels: [{% for price in stock_data['best']['history'] %}'{{ price['date'][:10] }}'{% if not loop.last %}, {% endif %}{% endfor %}],
-                datasets: [{
-                    label: 'Price',
-                    data: [
-                        {% for price in stock_data['best']['history'] %}
-                            {
-                                t: '{{ price['date'][:10] }}',
-                                y: {{ price['price'] }}
-                            }{% if not loop.last %},{% endif %}
-                        {% endfor %}
-                    ],
-                    /* styling */
-                    backgroundColor: 'rgba(200,200,200,0)',
-                    borderColor: 'rgba(206,206,206,0.8)',
-                    borderWidth: 3,
-                    lineTension: 0.1, /* Makes connection between data less curved */
-                }]
-            }
-        };
-        var bestChangeChart = new Chart(ctx, config);
-    </script>
+    {{ timeCartesianChart('bestChangeChart', stock_data['best']['data']['code'], stock_data['best']['data']['exchange']) }}
 {% endblock %}

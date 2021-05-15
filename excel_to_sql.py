@@ -4,9 +4,9 @@ import datetime, pythoncom, threading
 from functools import wraps, partial
 from time import sleep
 import progressbar
-from atexit import register
 
 returned_values = []
+
 
 class noStockData(Exception):
     """Raised when there is no stock data to retrieve"""
@@ -89,12 +89,13 @@ def excel_function(func):
     @wraps(func)
     def wrapper(*args, **kwargs):
         # print('excel_function2')
-        if 0 == 1:
-            excel = win32.Dispatch('Excel.Application')
-            file = r'C:\Users\HARRINGAJ\OneDrive - Iona College\Units 3+4\Digital Solutions\IA2\IA2 Example Project\StocksBook.xlsx'
-            workbook = excel.Workbooks.Open(file)
-            workbook.Refreshall()
-        else:
+        excel = win32.Dispatch('Excel.Application')
+        # Sometimes an AttributeError is raised when an Excel file is already open in the background.
+        # In such an occurrence, the excel program is exited and reopened.
+        try:
+            workbook = excel.Workbooks.Add()
+        except AttributeError:
+            excel.Quit()
             excel = win32.Dispatch('Excel.Application')
             workbook = excel.Workbooks.Add()
         excel.Visible = False
@@ -149,17 +150,16 @@ def get_historic_data_2(excel, workbook, ticker, start_date):
         'DELTA', str((datetime.datetime.now(tz=local_tz) - start_date).days))
     retries = 0
     max_retries = 10000
-    # -2146826237 - #VALUE!
-    # -2146826273 - #BUSY!
+    # -2146826273 - #VALUE!
+    # -2146826237 - #BUSY!
     # Waits until either the STOCKHISTORY function has loaded or throws a #VALUE! error
-    while excel.Cells(1, 1).Value == -2146826273 and retries < max_retries:
+    while excel.Cells(1, 1).Value == -2146826237 and retries < max_retries:
         # print('Cell Value:', excel.Cells(1, 1).Value)
         retries += 1
         pass
-    if excel.Cells(1, 1).Value == -2146826237:
+    if excel.Cells(1, 1).Value == -2146826273:
         workbook.Close(SaveChanges=False)
         excel.Quit()
         raise noStockData
-
 
     read_workbook(excel, workbook, [1, 2])

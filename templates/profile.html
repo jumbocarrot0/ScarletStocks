@@ -1,4 +1,5 @@
 {% extends 'base.html' %}
+{% from 'macros.html' import timeCartesianChart %}
 
 {% block content %}
 
@@ -42,6 +43,10 @@
                 </div>
             </div>
         </div>
+    </div>
+    <div class="container" style="height: 70vh">
+        <canvas style="background-color: rgba(0, 0, 0, 0.75); padding: 10px; width: 100%"
+                id="priceHistoryChart"></canvas>
     </div>
 
 {% endblock %}
@@ -93,4 +98,5 @@
             }
         }
     </script>
+    {{ timeCartesianChart('priceHistoryChart', stock_data['code'], stock_data['exchange']) }}
 {% endblock %}

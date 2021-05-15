@@ -86,7 +86,7 @@ def select_portfolio(userId, idOnly=False):
 
 
 def select_search(input):
-    data = execute_sql("SELECT * FROM stocks WHERE name LIKE ?", ('%' + input + '%',))
+    data = execute_sql("SELECT * FROM stocks WHERE name LIKE ? OR code like ?", ('%' + input + '%',)*2)
     return data
 
 
@@ -105,7 +105,7 @@ def select_one(exchange, ticker):
     return data
 
 
-def select_conditions(table, *selected_columns, query_limit=None, order_by=None, **conditions):
+def select_conditions(table, *selected_columns, query_limit=None, query_offset=None, order_by=None, **conditions):
     sql_query = 'SELECT '
     for column in selected_columns:
         sql_query += column + ', '
@@ -124,6 +124,8 @@ def select_conditions(table, *selected_columns, query_limit=None, order_by=None,
         sql_query += order_by.replace(' DESC', '').replace(' ASC', '') + ' NOT NULL ORDER BY ' + order_by
     if query_limit:
         sql_query += ' LIMIT ' + str(query_limit)
+        if query_offset:
+            sql_query += ' OFFSET ' + str(query_offset)
     sql_params = tuple([conditions[i] for i in conditions])
     # print(sql_query, sql_params)
     data = execute_sql(sql_query, sql_params)

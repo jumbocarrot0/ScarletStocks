@@ -6,6 +6,7 @@ from pywintypes import com_error
 
 import progressbar
 
+
 # --------------- ARCHIVED CODE, NOW USERS KWARG SYSTEM -------------------
 
 # Adds a new user to the database
@@ -62,6 +63,7 @@ import progressbar
 
 
 def add_historic_data(ticker, exchange, start_date):
+    print(ticker, exchange)
     # It shouldn't be anything other than this
     if exchange != 'Australian Securities Exchange':
         return
@@ -72,7 +74,7 @@ def add_historic_data(ticker, exchange, start_date):
                                     exchange='Australian Securities Exchange')
 
     # Adds a timezone to start_date, as datetime cannot compare dates with and without a timezone
-    # (By default the dates in the database have timezones attached
+    # By default the dates in the database have timezones attached
     local_tz = datetime.timezone(datetime.timedelta(hours=10), name='UTC+10')
     start_date = start_date.replace(tzinfo=local_tz)
     print('latest date:', latest_date)
@@ -87,11 +89,14 @@ def add_historic_data(ticker, exchange, start_date):
     stock_history = None
     while stock_history is None:
         # print('stock_history:', stock_history)
+        print('start_date:', start_date)
         try:
             stock_history = get_historic_data('XASX:' + ticker, start_date)
         except com_error:
+            print('com_error')
             pass
         except noStockData:
+            print('noStockData')
             return
     print('stock_history:', stock_history)
     # stock_data[0] is the date, stock_data[1] is the price
@@ -130,17 +135,17 @@ def add_to_sql_table(table, **columns):
     execute_sql(sql_statement, sql_params)
 
 
-def update_sql_table(table, conditions={}, **new_values):
+def update_sql_table(table, conditions=None, **new_values):
     # Constructs the SQL statement given the columns and values
-    sql_statement = 'UPDATE ' + table + ' '
+    sql_statement = 'UPDATE ' + table + ' SET '
     for column in new_values:
-        sql_statement += 'SET ' + column + '=?, '
+        sql_statement += column + '=?, '
     sql_statement = sql_statement[:-2]
     if conditions:
         sql_statement += ' WHERE '
         for column in conditions:
-            sql_statement += column + '=?, '
-        sql_statement = sql_statement[:-2]
+            sql_statement += column + '=? AND '
+        sql_statement = sql_statement[:-5]
 
     # Creates a tuple of entry values to be substituted in the statement
     sql_params = tuple(new_values.values())

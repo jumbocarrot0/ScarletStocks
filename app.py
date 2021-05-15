@@ -61,15 +61,16 @@ def load_user(user_id):
 
 # ----------------------- Context Processors -----------------------------
 
-# These are essentially global variables for jinja templates
-# This one creates a 'global variable' for stocks to be used in the search bar's auto-fill
+# Context processors allow for variables and functions to be injected into Jinja templates
+# This one creates a 'global variable' for stocks to be used in the search bar's auto-fill.
 @app.context_processor
 def inject_stock_names():
     stock_data = select_specific_columns('stocks', 'code', 'exchange', 'name')
     return dict(global_stock_data=stock_data)
 
 
-# This one gives a list of stocks in the user's watchlists
+# This one gives a list of stocks in the user's watchlists. This is not strictly
+# necessary but is less hassle than putting on every possible route it could appear on.
 @app.context_processor
 def inject_watchlist():
     if current_user.is_authenticated:
@@ -96,42 +97,37 @@ def home_route():
                                      query_limit=1, order_by='pctChange ASC')[0]
     biggest_volume = select_conditions('stocks', 'code', 'exchange', 'name', 'lastTradeTime', 'volume',
                                        query_limit=1, order_by='volume DESC')[0]
-    # THIS MAKES WEBSITE SLOW
-    add_historic_data(best_change['code'], best_change['exchange'], datetime(2016, 1, 1))
-    # add_historic_data(worst_change['code'], worst_change['exchange'], datetime(2016, 1, 1))
-    best_stock_history = select_conditions('historic_prices', 'price', 'date', order_by='date DESC', query_limit=30,
-                                           code=best_change['code'],
-                                           exchange=best_change['exchange'])
-    best_stock_history.reverse()
-    # worst_stock_history = add_historic_data(worst_change['code'], worst_change['exchange'], datetime(2016, 1, 1))
-    stock_data = {'best': {'data': best_change, 'history': best_stock_history},
+    stock_data = {'best': {'data': best_change},
                   'worst': {'data': worst_change},
                   'biggest_volume': {'data': biggest_volume}}
     return render_template('dashboard.html', title='ScarletStocks - Home', stock_data=stock_data,
                            abstain_margin=True)
 
 
-@app.route('/search', methods=['GET', 'POST'])
+@app.route('/search', methods=['GET'])
 def search_route():
-    if request.method == 'POST':
-        search_input = request.form['header_search']
-        results = select_search(search_input)
-        if len(results) == 1:
-            return redirect(url_for('profile_route', ticker=results[0]['code'], exchange=results[0]['exchange']))
-        else:
-            if len(results) == 0:
-                flash('''Your search - "''' + str(search_input) + '''" - did not match any documents.
-                            Make sure that all words are spelled correctly. 
-                            Otherwise, Try different keywords or more general keywords.''')
-            return render_template('search_results.html',
-                                   output_results=results,
-                                   search_input=search_input)
+    search_input = request.args.get('search')
+    results = select_search(search_input)
+    if len(results) == 1:
+        return redirect(url_for('profile_route', ticker=results[0]['code'], exchange=results[0]['exchange']))
     else:
-        return redirect(url_for('home_page'))
+        if len(results) == 0:
+            flash('''Your search - "''' + str(search_input) + '''" - did not match any documents.
+                        Make sure that all words are spelled correctly. 
+                        Otherwise, Try different keywords or more general keywords.''')
+        return render_template('search_results.html',
+                               output_results=results,
+                               search_input=search_input)
 
 
-@app.route('/stocklist/<page>')
-def stocklist_route(page):
+@app.route('/stocklist')
+def exchangelist_route():
+    return 'Exchanges here'
+    # return render_template('stocklist.html', title='ScarletStocks - Exchanges')
+
+
+@app.route('/stocklist/<exchange>/browse/<page>')
+def stocklist_route(exchange, page):
     # Prevents generating url where page is not a valid number
     # (a valid number being between 1 and the number of stocks / 100 rounded up.
     try:
@@ -141,10 +137,12 @@ def stocklist_route(page):
     page_count = ceil(select_table_size('stocks') / 100)
     if page <= 0 or page > page_count:
         abort(404)
-    stock_data = select_many(100 * (page - 1), 100 * page - 1)
+    stock_data = select_conditions('stocks', '*', query_limit=100, query_offset=100 * (page - 1), order_by='code',
+                                   exchange=exchange)
     # for row in stock_data:
     #     del row['description']
-    return render_template('stocklist.html', title='ScarletStocks - Stocklist',
+    return render_template('stocklist.html', title='ScarletStocks - ' + exchange,
+                           exchange=exchange,
                            stock_data=stock_data,
                            heading='Stock List',
                            page_count=page_count,
@@ -156,7 +154,6 @@ def profile_route(exchange, ticker):
     # Google auto replaces ' ' with '%20' in URLs, which breaks SQL code.
     # This must be reversed before substituting into SQL.
     stock_data = select_one(exchange.replace('%20', ' '), ticker)[0]
-    print(stock_data)
     return render_template('profile.html', title='ScarletStocks - ' + stock_data['name'],
                            stock_data=stock_data)
 
@@ -318,13 +315,31 @@ def invalid_page(e):
 
 # ------------------------------- AJAX Queries ------------------------------------------
 
-@app.route('/return_data', methods=['POST'])
+
+@app.route('/return_historic_data', methods=['POST'])
+def ajax_get_historic_data():
+    code = request.form['code']
+    exchange = request.form['exchange']
+    # THIS MAKES WEBSITE SLOW
+    add_historic_data(code, exchange, datetime(2016, 1, 1))
+    # print(stock_data)
+    stock_history = select_conditions('historic_prices', 'price', 'date', order_by='date DESC', query_limit=30,
+                                      code=code, exchange=exchange)
+    stock_history.reverse()
+    chart_data = [{'t': p['date'][:10], 'y': p['price']} for p in stock_history]
+    chart_labels = [p['date'][:10] for p in stock_history]
+    output_data = [chart_data, chart_labels]
+    return json.dumps(output_data)
+
+
+@app.route('/update_stocks_data', methods=['POST'])
 def ajax_update_stocks():
-    update_stocks_table()
-    stock_data = select_all()
-    # for row in stock_data:
-    #     del row['description']
-    return json.dumps(stock_data)
+    visible_codes = request.form['visibleCodes']
+    update_given_asx_stocks(visible_codes)
+    print(visible_codes)
+    return json.dumps('success')
+    # stock_data = select_all()
+    # return json.dumps(stock_data)
 
 
 @app.route('/return_stocks_data', methods=['POST'])

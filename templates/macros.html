@@ -1,0 +1,64 @@
+{% macro timeCartesianChart(chartId, code, exchange) %}
+    <script>
+
+        //Creating AJAX object and variables
+        var ajax = new XMLHttpRequest();
+        var method = 'POST';
+        var url = '{{ url_for('ajax_get_historic_data') }}';
+        var asynchronous = true;
+
+        //open and send AJAX request using XMLH object
+        ajax.open(method, url, asynchronous);
+        ajax.setRequestHeader('Content-type', 'application/x-www-form-urlencoded');
+        ajax.send('code={{ code }}&exchange={{ exchange }}');
+
+
+        //receive response from query
+        ajax.onreadystatechange = function () {
+            if (this.readyState === 4 && this.status === 200) {
+                var output_data = this.responseText;
+                output_data = JSON.parse(output_data);
+                const chart_labels = output_data[1];
+                const chart_data = output_data[0];
+                /* this code is to create the graph with chartjs.
+                The x-axis is created to be evenly spread by date. */
+                var ctx = document.getElementById('{{ chartId }}').getContext('2d');
+                const config = {
+                    type: 'line',
+                    options: {
+                        scales: {
+                            xAxes: [{
+                                type: 'time',
+                                ticks: {
+                                    fontColor: "rgba(255, 255, 255, 1)",
+                                }
+                            }],
+                            yAxes: [{
+                                ticks: {
+                                    fontColor: "rgba(255, 255, 255, 1)",
+                                }
+                            }]
+                        }
+                    },
+                    data: {
+                        labels: chart_labels,
+                        datasets: [{
+                            label: 'Price',
+                            data: chart_data,
+                            /* styling */
+                            backgroundColor: 'rgba(200,200,200,0)',
+                            borderColor: 'rgba(206,206,206,0.8)',
+                            borderWidth: 3,
+                            lineTension: 0.1, /* Makes connection between data less curved */
+                        }]
+                    }
+                };
+                var timeCartesianChart = new Chart(ctx, config);
+
+                //document.location.reload(true)
+
+            }
+
+        };
+    </script>
+{% endmacro %}
