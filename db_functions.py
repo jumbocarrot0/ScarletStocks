@@ -65,13 +65,13 @@ import progressbar
 def add_historic_data(ticker, exchange, start_date):
     print(ticker, exchange)
     # It shouldn't be anything other than this
-    if exchange != 'Australian Securities Exchange':
-        return
+    # if exchange != 'Australian Securities Exchange':
+    #     return
     latest_date = select_conditions('historic_prices', 'date',
                                     query_limit=1,
                                     order_by='date DESC',
                                     code=ticker,
-                                    exchange='Australian Securities Exchange')
+                                    exchange=exchange)
 
     # Adds a timezone to start_date, as datetime cannot compare dates with and without a timezone
     # By default the dates in the database have timezones attached
@@ -86,12 +86,13 @@ def add_historic_data(ticker, exchange, start_date):
             if start_date > datetime.datetime.now(tz=local_tz):
                 return
 
+    excel_code = select_conditions('exchanges', 'excelCode', query_limit=1, exchange=exchange)
     stock_history = None
     while stock_history is None:
         # print('stock_history:', stock_history)
         print('start_date:', start_date)
         try:
-            stock_history = get_historic_data('XASX:' + ticker, start_date)
+            stock_history = get_historic_data(excel_code + ':' + ticker, start_date)
         except com_error:
             print('com_error')
             pass
@@ -117,7 +118,7 @@ def add_historic_data(ticker, exchange, start_date):
         stock_price = str(stock_data[1])
         add_to_sql_table('historic_prices',
                          code=ticker,
-                         exchange='Australian Securities Exchange',
+                         exchange=exchange,
                          price=stock_price,
                          date=stock_date)
 
@@ -156,8 +157,8 @@ def update_sql_table(table, conditions=None, **new_values):
 
 
 # Removes from a table in the database given the conditions.
-# E.g: remove_from_sql_table('stocks', exchange='New York Stock Exchange', currency='AUD')
-# would delete every entry where exchange='New York Stock Exchange' and currency='AUD'
+# E.g: remove_from_sql_table('stocks', exchange='NYSE', suspended=1)
+# would delete every entry in the stocks table where exchange='NYSE' and suspended=1
 def remove_from_sql_table(table, **columns):
     # Constructs the SQL statement given the columns and values
     sql_statement = 'DELETE FROM ' + table + ' WHERE'

@@ -76,7 +76,7 @@ def select_portfolio(userId, idOnly=False):
     else:
         sql_query = """SELECT portfolios.*, (stocks.price - portfolios.price) * quantity AS profit, 
         stocks.name, stocks.price AS 'Current Price', price_day_change/stocks.price AS pctChange, 
-        stocks.currency, stocks.lastTradeTime FROM portfolios 
+        stocks.lastTradeTime FROM portfolios 
         LEFT OUTER JOIN stocks ON portfolios.code = stocks.code
         WHERE portfolios.exchange = stocks.exchange AND portfolios.userId = ?"""
     sql_params = (userId,)

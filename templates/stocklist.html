@@ -151,7 +151,7 @@
             //open and send AJAX request using XMLH object
             ajax.open(method, url, asynchronous);
             ajax.setRequestHeader('Content-type', 'application/x-www-form-urlencoded');
-            ajax.send('visibleCodes=' + visible_codes);
+            ajax.send('visibleCodes=' + visible_codes + '&exchange={{ exchange }}');
 
             //receive response from query
             ajax.onreadystatechange = function () {

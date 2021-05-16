@@ -12,7 +12,6 @@ def create_stocks_excel_table():
     name TEXT NOT NULL,
     price DECIMAL(20, 2) NOT NULL,
     pctChange DECIMAL(6, 2) NOT NULL,
-    currency TEXT NOT NULL,
     high52 DECIMAL(20, 2) NOT NULL,
     low52 DECIMAL(20, 2) NOT NULL,
     pe DECIMAL(20, 2) NOT NULL,
@@ -34,7 +33,6 @@ def create_stocks_table():
     name TEXT NOT NULL,
     price DECIMAL(20, 2) CHECK(price >= 0),
     price_day_change DECIMAL(20, 2) NOT NULL,
-    currency TEXT NOT NULL,
     high52 DECIMAL(20, 2) CHECK(high52 >= 0),
     low52 DECIMAL(20, 2) CHECK(low52 >= 0),
     pe DECIMAL(20, 2) NOT NULL,
@@ -101,12 +99,32 @@ def create_historic_prices_table():
     )''')
 
 
+def create_exchanges_table():
+    c.execute('''
+    CREATE TABLE IF NOT EXISTS exchanges(
+    exchange TEXT PRIMARY KEY,
+    name TEXT NOT NULL,
+    excelCode TEXT NOT NULL,
+    currencyCode TEXT NOT NULL
+    )''')
+
+
+def create_currencies_table():
+    c.execute('''
+    CREATE TABLE IF NOT EXISTS currencies(
+    currencyCode TEXT PRIMARY KEY,
+    name TEXT NOT NULL
+    )''')
+
+
 def create_stocksdb():
     create_stocks_table()
     create_users_table()
     create_watchlist_table()
     create_portfolio_table()
     create_historic_prices_table()
+    create_exchanges_table()
+    create_currencies_table()
 
 
 create_stocksdb()

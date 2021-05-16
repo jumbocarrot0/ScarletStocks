@@ -6,6 +6,7 @@ from os import environ
 from hashlib import sha224
 from db_functions import *
 from pyasx_to_sql import *
+from yahoo_to_sql import *
 import json
 from datetime import datetime
 from math import ceil
@@ -335,11 +336,19 @@ def ajax_get_historic_data():
 @app.route('/update_stocks_data', methods=['POST'])
 def ajax_update_stocks():
     visible_codes = request.form['visibleCodes']
-    update_given_asx_stocks(visible_codes)
+    exchange = request.form['exchange']
+    if exchange == 'ASX':
+        update_given_asx_stocks(visible_codes)
+    elif exchange == 'NYSE':
+        update_all_nyse_stocks()
+    elif exchange == 'NASDAQ':
+        update_all_nasdaq_stocks()
+    elif exchange == 'NYSEAMERICAN':
+        update_all_amex_stocks()
+    else:
+        return json.dumps('error')
     print(visible_codes)
     return json.dumps('success')
-    # stock_data = select_all()
-    # return json.dumps(stock_data)
 
 
 @app.route('/return_stocks_data', methods=['POST'])

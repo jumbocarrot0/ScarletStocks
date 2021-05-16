@@ -46,13 +46,12 @@ def update_given_asx_stocks(*stock_codes):
             continue
 
         update_sql_table('stocks',
-                         conditions={'code': stock_data['ticker'], 'exchange': 'Australian Securities Exchange'},
+                         conditions={'code': stock_data['ticker'], 'exchange': 'ASX'},
                          code=stock_data['ticker'],
-                         exchange='Australian Securities Exchange',
+                         exchange='ASX',
                          name=stock_data['name'],
                          price=stock_data['primary_share']['last_price'],
                          price_day_change=stock_data['primary_share']['day_change_price'],
-                         currency='AUD',
                          high52=stock_data['primary_share']['year_high_price'],
                          low52=stock_data['primary_share']['year_low_price'],
                          pe=stock_data['primary_share']['pe'],
@@ -68,7 +67,7 @@ def update_given_asx_stocks(*stock_codes):
 def update_all_asx_stocks():
     # Read to a dataframe
     stocks_data = Cp.get_listed_companies()
-    current_stocks = [i['code'] for i in select_conditions('stocks', 'code', exchange='Australian Stocks Exchange')]
+    current_stocks = [i['code'] for i in select_conditions('stocks', 'code', exchange='ASX')]
 
     format_stock_name = progressbar.FormatCustomText(
         'Current Stock: %(stock)s',
@@ -95,11 +94,10 @@ def update_all_asx_stocks():
         if stock_data['ticker'] in current_stocks:
             add_to_sql_table('stocks',
                              code=stock_data['ticker'],
-                             exchange='Australian Securities Exchange',
+                             exchange='ASX',
                              name=stock_data['name'],
                              price=stock_data['primary_share']['last_price'],
                              price_day_change=stock_data['primary_share']['day_change_price'],
-                             currency='AUD',
                              high52=stock_data['primary_share']['year_high_price'],
                              low52=stock_data['primary_share']['year_low_price'],
                              pe=stock_data['primary_share']['pe'],
@@ -112,13 +110,12 @@ def update_all_asx_stocks():
                              suspended=stock_data['primary_share']['is_suspended'])
         else:
             update_sql_table('stocks',
-                             conditions={'code': stock_data['ticker'], 'exchange': 'Australian Securities Exchange'},
+                             conditions={'code': stock_data['ticker'], 'exchange': 'ASX'},
                              code=stock_data['ticker'],
-                             exchange='Australian Securities Exchange',
+                             exchange='ASX',
                              name=stock_data['name'],
                              price=stock_data['primary_share']['last_price'],
                              price_day_change=stock_data['primary_share']['day_change_price'],
-                             currency='AUD',
                              high52=stock_data['primary_share']['year_high_price'],
                              low52=stock_data['primary_share']['year_low_price'],
                              pe=stock_data['primary_share']['pe'],
