@@ -101,13 +101,16 @@
                     <a class="nav-link" href="{{ url_for('home_route') }}">Home</a>
                 </li>
                 <li class="nav-item dropdown">
-                    <a class="nav-link dropdown-toggle" href="#" id="navbarDropdown" role="button"
+                    <a class="nav-link dropdown-toggle" href="#" id="exchangeDropdown" role="button"
                        data-bs-toggle="dropdown" aria-expanded="false">
                         Stocklists
                     </a>
-                    <ul class="dropdown-menu" aria-labelledby="navbarDropdown">
+                    <ul class="dropdown-menu" aria-labelledby="exchangeDropdown">
                         <li><a class="dropdown-item"
-                               href="{{ url_for("stocklist_route", exchange='Australian Securities Exchange', page=1) }}">ASX</a>
+                               href="{{ url_for("stocklist_route", exchange='ASX', page=1) }}">ASX</a>
+                               href="{{ url_for("stocklist_route", exchange='NYSE', page=1) }}">ASX</a>
+                               href="{{ url_for("stocklist_route", exchange='NASDAQ', page=1) }}">ASX</a>
+                               href="{{ url_for("stocklist_route", exchange='NYSEAMERICAN', page=1) }}">ASX</a>
                         </li>
                     </ul>
                 </li>
@@ -132,11 +135,11 @@
                     </li>
                 {% else %}
                     <li class="nav-item dropdown">
-                        <a class="nav-link dropdown-toggle" href="#" id="navbarDropdown" role="button"
+                        <a class="nav-link dropdown-toggle" href="#" id="userDropdown" role="button"
                            data-bs-toggle="dropdown" aria-expanded="false">
                             {{ current_user.email }}
                         </a>
-                        <ul class="dropdown-menu" aria-labelledby="navbarDropdown">
+                        <ul class="dropdown-menu" aria-labelledby="userDropdown">
                             <li><a class="dropdown-item" href="{{ url_for("watchlist_route") }}">Watchlist</a></li>
                             <li><a class="dropdown-item" href="{{ url_for("portfolio_route") }}">Portfolio</a></li>
                             <li><a class="dropdown-item" href="{{ url_for("portfolio_add_route") }}">Add to

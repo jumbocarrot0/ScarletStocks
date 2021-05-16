@@ -34,12 +34,19 @@ def example(fn):
     examples.append(wrapped)
     return wrapped
 
+@example
+def counter_and_timer():
+    widgets = ['Processed: ', progressbar.Counter('Counter: %(value)05d')]
+    bar = progressbar.ProgressBar(widgets=widgets)
+    for i in range(15):
+        time.sleep(0.1)
+
 
 @example
 def fast_example():
     ''' Updates bar really quickly to cause flickering '''
     with progressbar.ProgressBar(widgets=[progressbar.Bar()]) as bar:
-        for i in range(100000):
+        for i in range(100):
             bar.update(int(i), force=True)
 
 

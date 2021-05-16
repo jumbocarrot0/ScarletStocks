@@ -35,7 +35,7 @@ def create_stocks_table():
     price_day_change DECIMAL(20, 2) NOT NULL,
     high52 DECIMAL(20, 2) CHECK(high52 >= 0),
     low52 DECIMAL(20, 2) CHECK(low52 >= 0),
-    pe DECIMAL(20, 2) NOT NULL,
+    pe DECIMAL(20, 2), -- Was NOT NULL, but yahoo finances is inconsistent
     suspended INTEGER CHECK(0 == suspended or suspended == 1),
     industry TEXT,
     description TEXT,
